@@ -1,0 +1,923 @@
+<?php
+
+session_start();
+
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/db.php';
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../login.php");
+    exit;
+}
+
+$user_id = $_SESSION['user_id'];
+$role    = $_SESSION['role'] ?? '';
+
+/*
+|--------------------------------------------------------------------------
+| BACK OFFICE ACCESS
+|--------------------------------------------------------------------------
+*/
+
+if ($role === 'cashier') {
+    header("Location: ../pos/index.php");
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| GET EXPENSE ID
+|--------------------------------------------------------------------------
+*/
+
+$id = filter_input(
+    INPUT_GET,
+    'id',
+    FILTER_VALIDATE_INT
+);
+
+if (!$id) {
+    header("Location: index.php");
+    exit;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| FETCH EXPENSE
+|--------------------------------------------------------------------------
+*/
+
+$stmt = $pdo->prepare("
+    SELECT
+        e.*,
+        u.full_name
+    FROM expenses e
+    LEFT JOIN users u
+        ON u.id = e.user_id
+    WHERE e.id = :id
+    LIMIT 1
+");
+
+$stmt->execute([
+    ':id' => $id
+]);
+
+$expense = $stmt->fetch();
+
+
+if (!$expense) {
+    header("Location: index.php");
+    exit;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| DEFAULT VALUES
+|--------------------------------------------------------------------------
+*/
+
+$error = '';
+
+$expense_category = $expense['expense_category'];
+$description      = $expense['description'] ?? '';
+$amount            = $expense['amount'];
+$expense_date      = date(
+    'Y-m-d\TH:i',
+    strtotime($expense['expense_date'])
+);
+
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE EXPENSE
+|--------------------------------------------------------------------------
+*/
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $expense_category = trim(
+        $_POST['expense_category'] ?? ''
+    );
+
+    $description = trim(
+        $_POST['description'] ?? ''
+    );
+
+    $amount = trim(
+        $_POST['amount'] ?? ''
+    );
+
+    $expense_date = trim(
+        $_POST['expense_date'] ?? ''
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    if ($expense_category === '') {
+
+        $error = 'Please enter an expense category.';
+
+    } elseif ($amount === '') {
+
+        $error = 'Please enter the expense amount.';
+
+    } elseif (!is_numeric($amount)) {
+
+        $error = 'Expense amount must be a valid number.';
+
+    } elseif ((float) $amount <= 0) {
+
+        $error = 'Expense amount must be greater than zero.';
+
+    } elseif ($expense_date === '') {
+
+        $error = 'Please select the expense date.';
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE DATABASE
+    |--------------------------------------------------------------------------
+    */
+
+    if ($error === '') {
+
+        $formatted_date = date(
+            'Y-m-d H:i:s',
+            strtotime($expense_date)
+        );
+
+
+        try {
+
+            $stmt = $pdo->prepare("
+                UPDATE expenses
+
+                SET
+                    expense_category = :expense_category,
+                    description = :description,
+                    amount = :amount,
+                    expense_date = :expense_date
+
+                WHERE id = :id
+            ");
+
+
+            $stmt->execute([
+
+                ':expense_category'
+                    => $expense_category,
+
+                ':description'
+                    => $description,
+
+                ':amount'
+                    => $amount,
+
+                ':expense_date'
+                    => $formatted_date,
+
+                ':id'
+                    => $id
+
+            ]);
+
+
+            header(
+                "Location: index.php?success=updated"
+            );
+
+            exit;
+
+
+        } catch (PDOException $e) {
+
+            $error =
+                'Failed to update expense. Please try again.';
+
+        }
+
+    }
+
+}
+
+?>
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>
+    Edit Expense | Canteen POS
+</title>
+
+
+<style>
+
+/* ==========================================================
+   RESET
+========================================================== */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+/* ==========================================================
+   BODY
+========================================================== */
+
+body {
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        #f5f6f8;
+
+    color:
+        #1f2937;
+}
+
+
+/* ==========================================================
+   PAGE
+========================================================== */
+
+.page {
+
+    max-width:
+        850px;
+
+    margin:
+        40px auto;
+
+    padding:
+        0 20px;
+
+}
+
+
+/* ==========================================================
+   HEADER
+========================================================== */
+
+.page-header {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        25px;
+
+}
+
+
+.page-header h1 {
+
+    font-size:
+        28px;
+
+    font-weight:
+        700;
+
+}
+
+
+.page-header p {
+
+    color:
+        #6b7280;
+
+    margin-top:
+        6px;
+
+}
+
+
+/* ==========================================================
+   CARD
+========================================================== */
+
+.card {
+
+    background:
+        #ffffff;
+
+    border-radius:
+        12px;
+
+    padding:
+        30px;
+
+    box-shadow:
+        0 2px 10px
+        rgba(0,0,0,0.05);
+
+}
+
+
+/* ==========================================================
+   INFO BAR
+========================================================== */
+
+.expense-info {
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    background:
+        #f9fafb;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius:
+        8px;
+
+    padding:
+        14px 16px;
+
+    margin-bottom:
+        25px;
+
+}
+
+
+.expense-number {
+
+    font-weight:
+        700;
+
+}
+
+
+.recorded-by {
+
+    color:
+        #6b7280;
+
+    font-size:
+        13px;
+
+}
+
+
+/* ==========================================================
+   FORM
+========================================================== */
+
+.form-grid {
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap:
+        20px;
+
+}
+
+
+.form-group {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+}
+
+
+.form-group.full {
+
+    grid-column:
+        1 / -1;
+
+}
+
+
+label {
+
+    font-size:
+        14px;
+
+    font-weight:
+        600;
+
+    margin-bottom:
+        8px;
+
+}
+
+
+input,
+textarea {
+
+    width:
+        100%;
+
+    padding:
+        12px 14px;
+
+    border:
+        1px solid #d1d5db;
+
+    border-radius:
+        8px;
+
+    font-size:
+        14px;
+
+    font-family:
+        inherit;
+
+}
+
+
+input:focus,
+textarea:focus {
+
+    outline:
+        none;
+
+    border-color:
+        #2563eb;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37,99,235,0.10);
+
+}
+
+
+input[readonly] {
+
+    background:
+        #f9fafb;
+
+    color:
+        #6b7280;
+
+}
+
+
+textarea {
+
+    min-height:
+        110px;
+
+    resize:
+        vertical;
+
+}
+
+
+/* ==========================================================
+   ERROR
+========================================================== */
+
+.alert-error {
+
+    background:
+        #fee2e2;
+
+    color:
+        #991b1b;
+
+    border:
+        1px solid #fecaca;
+
+    padding:
+        14px;
+
+    border-radius:
+        8px;
+
+    margin-bottom:
+        20px;
+
+    font-size:
+        14px;
+
+}
+
+
+/* ==========================================================
+   BUTTONS
+========================================================== */
+
+.form-actions {
+
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    gap:
+        10px;
+
+    margin-top:
+        30px;
+
+}
+
+
+.btn {
+
+    display:
+        inline-flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    padding:
+        11px 20px;
+
+    border-radius:
+        8px;
+
+    border:
+        none;
+
+    cursor:
+        pointer;
+
+    text-decoration:
+        none;
+
+    font-size:
+        14px;
+
+    font-weight:
+        600;
+
+}
+
+
+.btn-primary {
+
+    background:
+        #2563eb;
+
+    color:
+        white;
+
+}
+
+
+.btn-primary:hover {
+
+    background:
+        #1d4ed8;
+
+}
+
+
+.btn-secondary {
+
+    background:
+        #e5e7eb;
+
+    color:
+        #374151;
+
+}
+
+
+.btn-secondary:hover {
+
+    background:
+        #d1d5db;
+
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media (max-width: 700px) {
+
+    .form-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .form-group.full {
+
+        grid-column:
+            auto;
+
+    }
+
+
+    .expense-info {
+
+        flex-direction:
+            column;
+
+        align-items:
+            flex-start;
+
+        gap:
+            6px;
+
+    }
+
+
+    .form-actions {
+
+        flex-direction:
+            column-reverse;
+
+    }
+
+
+    .btn {
+
+        width:
+            100%;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="page">
+
+
+<!-- ========================================================
+     HEADER
+======================================================== -->
+
+<div class="page-header">
+
+    <div>
+
+        <h1>
+            Edit Expense
+        </h1>
+
+        <p>
+            Update the selected expense record.
+        </p>
+
+    </div>
+
+</div>
+
+
+
+<!-- ========================================================
+     CARD
+======================================================== -->
+
+<div class="card">
+
+
+<!-- EXPENSE INFORMATION -->
+
+<div class="expense-info">
+
+    <div class="expense-number">
+
+        <?= htmlspecialchars(
+            $expense['expense_no']
+        ) ?>
+
+    </div>
+
+
+    <div class="recorded-by">
+
+        Recorded by:
+
+        <?= htmlspecialchars(
+            $expense['full_name']
+            ?? 'Unknown'
+        ) ?>
+
+    </div>
+
+</div>
+
+
+
+<!-- ERROR -->
+
+<?php if ($error !== ''): ?>
+
+    <div class="alert-error">
+
+        <?= htmlspecialchars($error) ?>
+
+    </div>
+
+<?php endif; ?>
+
+
+
+<!-- FORM -->
+
+<form method="POST">
+
+
+<div class="form-grid">
+
+
+<!-- EXPENSE NUMBER -->
+
+<div class="form-group">
+
+    <label>
+        Expense No.
+    </label>
+
+    <input
+        type="text"
+        value="<?= htmlspecialchars(
+            $expense['expense_no']
+        ) ?>"
+        readonly
+    >
+
+</div>
+
+
+
+<!-- EXPENSE DATE -->
+
+<div class="form-group">
+
+    <label>
+        Expense Date
+    </label>
+
+    <input
+        type="datetime-local"
+        name="expense_date"
+        value="<?= htmlspecialchars(
+            $expense_date
+        ) ?>"
+        required
+    >
+
+</div>
+
+
+
+<!-- CATEGORY -->
+
+<div class="form-group full">
+
+    <label>
+        Expense Category
+    </label>
+
+    <input
+        type="text"
+        name="expense_category"
+        placeholder="Example: Utilities, Supplies, Repairs"
+        value="<?= htmlspecialchars(
+            $expense_category
+        ) ?>"
+        required
+    >
+
+</div>
+
+
+
+<!-- AMOUNT -->
+
+<div class="form-group">
+
+    <label>
+        Amount
+    </label>
+
+    <input
+        type="number"
+        name="amount"
+        min="0.01"
+        step="0.01"
+        value="<?= htmlspecialchars(
+            $amount
+        ) ?>"
+        required
+    >
+
+</div>
+
+
+
+<!-- DESCRIPTION -->
+
+<div class="form-group full">
+
+    <label>
+        Description
+    </label>
+
+    <textarea
+        name="description"
+        placeholder="Enter expense description..."
+    ><?= htmlspecialchars(
+        $description
+    ) ?></textarea>
+
+</div>
+
+
+</div>
+
+
+
+<!-- ACTIONS -->
+
+<div class="form-actions">
+
+
+<a
+    href="index.php"
+    class="btn btn-secondary"
+>
+    Cancel
+</a>
+
+
+<button
+    type="submit"
+    class="btn btn-primary"
+>
+    Update Expense
+</button>
+
+
+</div>
+
+
+</form>
+
+
+</div>
+
+
+</div>
+
+
+</body>
+
+</html>

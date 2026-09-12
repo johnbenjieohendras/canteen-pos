@@ -1,0 +1,477 @@
+:root {
+    --sidebar-width: 260px;
+    --sidebar-bg: #111827;
+    --sidebar-hover: #1f2937;
+    --sidebar-active: #2563eb;
+    --body-bg: #f5f7fb;
+    --text-dark: #111827;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--body-bg);
+    color: var(--text-dark);
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+.app-wrapper {
+    min-height: 100vh;
+}
+
+
+/* =========================
+   SIDEBAR
+========================= */
+
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    width: var(--sidebar-width);
+
+    background: var(--sidebar-bg);
+
+    color: #fff;
+
+    display: flex;
+    flex-direction: column;
+
+    z-index: 1000;
+}
+
+
+/* BRAND */
+
+.sidebar-brand {
+    height: 75px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 22px;
+
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.brand-icon {
+    width: 40px;
+    height: 40px;
+
+    background: #2563eb;
+
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 12px;
+
+    font-size: 20px;
+}
+
+.brand-title {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.sidebar-brand small {
+    color: #9ca3af;
+}
+
+
+/* USER */
+
+.sidebar-user {
+    padding: 18px;
+
+    display: flex;
+    align-items: center;
+
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+
+    border-radius: 50%;
+
+    background: #374151;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-weight: 700;
+
+    margin-right: 12px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+}
+
+.user-info strong {
+    font-size: 14px;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-info small {
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+
+/* MENU */
+
+.menu-title {
+    padding: 20px 20px 8px;
+
+    color: #6b7280;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: .08em;
+}
+
+.sidebar-menu {
+    padding: 0 10px;
+
+    overflow-y: auto;
+}
+
+.sidebar-menu a {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 11px 13px;
+
+    margin: 3px 0;
+
+    color: #d1d5db;
+
+    text-decoration: none;
+
+    border-radius: 8px;
+
+    font-size: 14px;
+
+    transition: .2s;
+}
+
+.sidebar-menu a i {
+    font-size: 17px;
+
+    width: 20px;
+
+    text-align: center;
+}
+
+.sidebar-menu a:hover {
+    background: var(--sidebar-hover);
+
+    color: #fff;
+}
+
+.sidebar-menu a.active {
+    background: var(--sidebar-active);
+
+    color: #fff;
+}
+
+
+/* LOGOUT */
+
+.sidebar-bottom {
+    margin-top: auto;
+
+    padding: 15px;
+
+    border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.logout-link {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 11px 13px;
+
+    color: #fca5a5;
+
+    text-decoration: none;
+
+    border-radius: 8px;
+}
+
+.logout-link:hover {
+    background: #3f1d1d;
+
+    color: #fecaca;
+}
+
+
+/* =========================
+   MAIN CONTENT
+========================= */
+
+.main-content {
+    margin-left: var(--sidebar-width);
+
+    min-height: 100vh;
+}
+
+
+/* TOPBAR */
+
+.topbar {
+    height: 75px;
+
+    background: #fff;
+
+    border-bottom: 1px solid var(--border-color);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 30px;
+}
+
+.page-heading h4 {
+    margin: 0;
+
+    font-weight: 700;
+}
+
+.page-heading small {
+    color: var(--text-muted);
+}
+
+
+/* =========================
+   CONTENT
+========================= */
+
+.content-area {
+    padding: 30px;
+}
+
+
+/* STAT CARDS */
+
+.stat-card {
+    background: #fff;
+
+    border: 1px solid var(--border-color);
+
+    border-radius: 12px;
+
+    padding: 20px;
+
+    height: 100%;
+
+    transition: .2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.05);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 21px;
+
+    margin-bottom: 15px;
+}
+
+.stat-title {
+    color: var(--text-muted);
+
+    font-size: 13px;
+
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 25px;
+
+    font-weight: 700;
+}
+
+
+/* DASHBOARD PANELS */
+
+.dashboard-card {
+    background: #fff;
+
+    border: 1px solid var(--border-color);
+
+    border-radius: 12px;
+
+    overflow: hidden;
+}
+
+.dashboard-card-header {
+    padding: 18px 20px;
+
+    border-bottom: 1px solid var(--border-color);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dashboard-card-header h6 {
+    margin: 0;
+
+    font-weight: 700;
+}
+
+.dashboard-card-body {
+    padding: 20px;
+}
+
+
+/* TABLE */
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    color: #6b7280;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+}
+
+.table td {
+    vertical-align: middle;
+
+    font-size: 14px;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 991px) {
+
+    .sidebar {
+        transform: translateX(-100%);
+
+        transition: .25s;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .content-area {
+        padding: 20px;
+    }
+
+}
+
+
+/* =========================================================
+   CATEGORY
+   ========================================================= */
+
+.category-icon {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 9px;
+
+    background: #eff6ff;
+
+    color: #2563eb;
+
+    font-size: 16px;
+}
+
+
+/* =========================================================
+   INVENTORY
+   ========================================================= */
+
+.inventory-product-icon {
+    width: 40px;
+    height: 40px;
+
+    margin-right: 11px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 9px;
+
+    background: #f3f4f6;
+
+    color: #4b5563;
+
+    font-size: 16px;
+}
+
+.inventory-product-icon i {
+    line-height: 1;
+}
+
+.stat-card .stat-value {
+    line-height: 1.1;
+}
+
+.table .text-warning {
+    color: #d97706 !important;
+}
